@@ -16,10 +16,11 @@ function ChatHeader() {
           Test Channel Name
         </h3>
       </div>
-      <div className="chatHeader__right"></div>
-      <NotificationsIcon />
-      <EditLocationRoundedIcon />
-      <PeopleAltRopundedIcon />
+      <div className="chatHeader__right">
+        <NotificationsIcon />
+        <EditLocationRoundedIcon />
+        <PeopleAltRopundedIcon />
+      </div>
       <div className="chatHeader__search">
         <input placeHolder="Search" />
         <SearchRoundedIcon />
