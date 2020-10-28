@@ -12,9 +12,34 @@ import HeadsetIcon from "@material-ui/icons/Headset";
 import SettingsIcon from "@material-ui/icons/Settings";
 import { selectUser } from "./features/userSlice";
 import { useSelector } from "react-redux";
+import db, { auth } from "./firebase";
+import { useState } from "react";
+import { useEffect } from "react";
 
 function Sidebar() {
   const user = useSelector(selectUser);
+
+  const [channels, setChannels] = useState([]);
+  useEffect(() => {
+    db.collection("channels").onSnapshot((snapshot) =>
+      setChannels(
+        snapshot.docs.map((doc) => ({
+          id: doc.id,
+          channel: doc.data(),
+        }))
+      )
+    );
+  }, []);
+
+  const handleAddChannel = () => {
+    const channelName = prompt("Enter new channel Name");
+
+    if (channelName) {
+      db.collection("channels").add({
+        channelName: channelName,
+      });
+    }
+  };
 
   return (
     <div className="sidebar">
@@ -29,12 +54,16 @@ function Sidebar() {
             <ExpandMoreIcon />
             <h4>Text channels</h4>
           </div>
-          <AddIcon className="sidebar__addChannel" />
+          <AddIcon onClick={handleAddChannel} className="sidebar__addChannel" />
         </div>
         <div className="sidebar__channelsList">
-          <SidebarChannel />
-          <SidebarChannel />
-          <SidebarChannel />
+          {channels.map(({ id, channel }) => (
+            <SidebarChannel
+              key={id}
+              id={id}
+              channelName={channel.channelName}
+            />
+          ))}
         </div>
       </div>
 
@@ -53,10 +82,10 @@ function Sidebar() {
         </div>
       </div>
       <div className="sidebar__profile">
-        <Avatar src={user.photo} />
+        <Avatar onClick={() => auth.signOut()} src={user.photo} />
         <div className="sidebar__profileInfo">
-          <h3>{user.diplayName}</h3>
-          <p>#thisismyID</p>
+          <h3>{user.displayName}</h3>
+          <p>{user.uid.substring(0, 5)}</p>
         </div>
         <div className="sidebar__profileIcons">
           <MicIcon />
