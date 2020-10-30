@@ -9,7 +9,9 @@ import Message from "./Message";
 import { useSelector } from "react-redux";
 import { selectChannelId, selectChannelName } from "./features/appSlice";
 import { selectUser } from "./features/userSlice";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import db from "./firebase";
+import firebase from "firebase";
 
 function Chat() {
   const channelId = useSelector(selectChannelId);
@@ -18,14 +20,40 @@ function Chat() {
 
   const [input, setInput] = useState([]);
 
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    if (channelId) {
+      db.collection("channels")
+        .doc(channelId)
+        .collection("messages")
+        .orderBy("timestamp", "asc")
+        .onSnapshot((snapshot) =>
+          setMessages(snapshot.docs.map((doc) => doc.data()))
+        );
+    }
+  }, [channelId]);
+
+  const sendMessage = (e) => {
+    e.preventDefault();
+    db.collection("channels").doc(channelId).collection("messages").add({
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      message: input,
+      user: user,
+    });
+    setInput("");
+  };
   return (
     <div className="chat">
       <ChantHeader channelName={channelName} />
       <div className="chat__messages">
-        <Message />
-        <Message />
-        <Message />
-        <Message />
+        {messages.map((message) => (
+          <Message
+            timestamp={message.timestamp}
+            message={message.message}
+            user={message.user}
+          />
+        ))}
       </div>
       <div className="chat__input">
         <AddCircleIcon fontSize="large" />
@@ -40,6 +68,7 @@ function Chat() {
             disabled={!channelId}
             className="chat__inputButton"
             type="submit"
+            onClick={sendMessage}
           >
             Send message
           </button>
